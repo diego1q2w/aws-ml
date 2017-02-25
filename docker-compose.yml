@@ -1,0 +1,31 @@
+version: '2'
+services:
+  master:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - rethinkdb
+      - rabbitmq
+    links:
+      - rethinkdb
+      - rabbitmq
+
+  worker:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - rethinkdb
+      - rabbitmq
+    links:
+      - rethinkdb
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.6
+
+  rethinkdb:
+    image: rethinkdb:2.3
+    volumes:
+      - ./.data:/data
