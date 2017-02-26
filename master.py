@@ -1,7 +1,7 @@
 from connection import mysql
 import rethinkdb as r
-from connection.rethink import Rethink
-from tasks.process_rows import ProcessRowsTask
+from connection import rethink
+from worker import process_rows_task
 from celery.result import AsyncResult
 import numpy as np
 import time
@@ -18,13 +18,15 @@ class Master:
 
     def start_process(self, process_id):
         with mysql.Mysql() as db_connection:
+            id_min = db_connection.getIdMin()
+            id_max = db_connection.getIdMax()
             cursor = db_connection.get_data().get_cursor()
             number_of_rows = cursor.rowcount
             if number_of_rows > 0:
                 number_of_chunks = np.ceil(float(number_of_rows)/float(self.chunk_size))
                 timestamp = time.time()
-                filename = timestamp + "_"+process_id+".csv"
-                with Rethink() as rethink_conn:
+                filename = str(timestamp) + "_"+process_id+".csv"
+                with rethink.Rethink() as rethink_conn:
                     rethink_conn.set_database()
                     conn = rethink_conn.get_connection()
                     resp = r.table('process').get(process_id).update({
@@ -32,8 +34,8 @@ class Master:
                         'chunks': number_of_chunks,
                         'processed_chunks': 0,
                         'chunk_size': int(self.chunk_size),
-                        'id_min': db_connection.getIdMin(),
-                        'id_max': db_connection.getIdMax(),
+                        'id_min': id_min,
+                        'id_max': id_max,
                         'file_name': filename,
                         'timestamp': timestamp,
                         'uploaded': False,
@@ -46,11 +48,11 @@ class Master:
         id_min = 0
         num_rows = 0
         for element in cursor:
-            job_no += 1
             num_rows += 1
             if update_min:
                 update_min = False
                 id_min = element['id']
+                job_no += 1
             if cursor.rownumber % chunk_size == 0:
                 try:
                     self.create_job_register(job_no, process_id, id_min, element['id'], num_rows)
@@ -63,7 +65,7 @@ class Master:
                     num_rows= 0
 
     def create_job_register(self, job_no, process_id, id_min, id_max, num_rows):
-        with Rethink() as rethink_conn:
+        with rethink.Rethink() as rethink_conn:
             rethink_conn.set_database()
             conn = rethink_conn.get_connection()
             res = r.table('job').insert({
@@ -74,7 +76,7 @@ class Master:
                 'finished': False,
                 'num_rows': num_rows,
                 'processed_rows': 0,
-                'file_name': process_id+"_"+job_no+".csv",
+                'file_name': str(process_id)+"_"+str(job_no)+".csv",
                 'file_processed': False}).run(conn)
             if res['errors'] == 0:
                 # will queue the job only in the case there was not an error, otherwise do not worry
@@ -82,11 +84,15 @@ class Master:
                 self.queue_chunk(res['generated_keys'][0])
 
     def queue_chunk(self, rethink_job_id):
-        task = ProcessRowsTask()
-        task_queued = task.delay(rethink_job_id)
+        task_queued = process_rows_task.delay(rethink_job_id)
+        task_id = task_queued.id
+        with rethink.Rethink() as rethink_conn:
+            rethink_conn.set_database()
+            conn = rethink_conn.get_connection()
+            r.table('job').get(rethink_job_id).update({'queue_id': task_id}).run(conn)
 
     def search_incomplete_process(self):
-        with Rethink() as rethink_conn:
+        with rethink.Rethink() as rethink_conn:
             rethink_conn.set_database()
             conn = rethink_conn.get_connection()
             processes = r.table('process').filter({'finished': False}).run(conn)
@@ -99,7 +105,7 @@ class Master:
                     self.start_process(process['id'])
 
     def search_failed_jobs(self, process):
-        with Rethink() as rethink_conn:
+        with rethink.Rethink() as rethink_conn:
             rethink_conn.set_database()
             conn = rethink_conn.get_connection()
             jobs = r.table('job').filter(
@@ -126,14 +132,14 @@ class Master:
 
                 min_id = int(job['id_max']) + 1
 
-            if int(process['chunk_size']) > job_no:
+            if int(process['chunks']) > job_no:
                 self.retry_job(job_no=job_no, min_id=min_id, max_id=int(max_id),
                                chunk_size=process['chunk_size'], process_id=process['id'])
 
     def is_falilure(self, job):
         if 'queue_id' in job:
             res = AsyncResult(job['queue_id'])
-            return res.failed() or res.forget()
+            return res.failed() or not res.ready()
         # the job was not even queued so lets queued
         return True
 
@@ -141,9 +147,10 @@ class Master:
         try:
             if rethink_job_id:
                 self.queue_chunk(rethink_job_id)
-            with mysql.Mysql() as db_connection:
-                cursor = db_connection.findIdByRange(kwars['min_id'], kwars['max_id']).get_cursor()
-                self.chunk_data(cursor, kwars['process_id'], kwars['chunk_size'], kwars['job_no'])
+            else:
+                with mysql.Mysql() as db_connection:
+                    cursor = db_connection.findIdByRange(kwars['min_id'], kwars['max_id']).get_cursor()
+                    self.chunk_data(cursor, kwars['process_id'], kwars['chunk_size'], kwars['job_no'])
         except Exception as e:
             print(e)
 

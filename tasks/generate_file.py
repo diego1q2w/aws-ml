@@ -1,7 +1,7 @@
-from worker import app
+from worker import celery_app
 
 
-class GenerateFileTask(app.Task):
+class GenerateFileTask(celery_app.Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         pass
 

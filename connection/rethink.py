@@ -7,9 +7,9 @@ class Rethink:
     DATABASE_NAME = os.environ.get('RETHINK_DB' or 'aws')
     TABLE_NAMES = ['process', 'job']
 
-    def __init__(self, rethink_host='localhost', rethink_port=29015):
-        self.conn = r.connect(host=os.environ.get('RETHINK_HOST' or rethink_host),
-                              port=os.environ.get('RETHINK_PORT' or rethink_port))
+    def __init__(self, rethink_host='localhost', rethink_port=28015):
+        self.conn = r.connect(host=os.environ.get('RETHINK_HOST', rethink_host),
+                              port=os.environ.get('RETHINK_PORT', rethink_port), timeout=20)
 
     def create_database(self):
         databases = r.db_list().run(self.conn)
@@ -48,7 +48,7 @@ process_table = {
     'file_name': 'string',
     'uploaded': 'boolean',
     'timestamp': 'number',
-    'chunk_size' : 'number'
+    'chunk_size' : 'numberrethinkdb'
 }
 
 
