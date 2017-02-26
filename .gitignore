@@ -86,6 +86,7 @@ venv/
 ENV/
 .idea
 .data
+.env
 
 # Spyder project settings
 .spyderproject
