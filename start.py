@@ -3,15 +3,18 @@
 
 import time
 import os
-from .master import Master
-from .connection.rethink import Rethink
+from master import Master
+from connection import rethink
 
 if __name__ == '__main__':
-    with Rethink() as rethink:
-        rethink.create_database()
-        rethink.set_database()
-        rethink.create_tables()
+    with rethink.Rethink() as rethink_conn:
+        rethink_conn.create_database()
+        rethink_conn.set_database()
+        rethink_conn.create_tables()
 
     while True:
-        Master().start()
-        time.sleep(os.environ.get('TIME_SLEEPING', 10))
+        try:
+            Master().start()
+        except Exception as e:
+            print(e)
+        time.sleep(int(os.environ.get('TIME_SLEEPING', 10)))
