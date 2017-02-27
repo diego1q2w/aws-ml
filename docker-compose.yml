@@ -4,6 +4,8 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+    command: python start.py
+    env_file: .env
     depends_on:
       - rethinkdb
       - rabbitmq
@@ -15,6 +17,8 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+    command: celery -A worker worker --loglevel=info
+    env_file: .env
     depends_on:
       - rethinkdb
       - rabbitmq
@@ -29,3 +33,5 @@ services:
     image: rethinkdb:2.3
     volumes:
       - ./.data:/data
+    ports:
+      - 8080:8080
