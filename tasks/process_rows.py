@@ -26,6 +26,8 @@ class ProcessRowsTask:
                 run(conn)
 
     def run(self):
+        if 'finished' in self.record and self.record['finished']:
+            return True
         with mysql.Mysql() as db_connection:
             ids = db_connection.findIdByRange(self.record['id_min'], self.record['id_max'])
             events = db_connection.findEventsWhereIds(",".join(map(str, ids)))
@@ -34,4 +36,4 @@ class ProcessRowsTask:
             process_col = columnas.Columnas(events, self.record['process_id'], self.record['file_name'])
             process_col.process()
         self.finish()
-        return True
+        return 'job_no' in self.record and self.record['job_no'] or 'Finished'
