@@ -22,7 +22,6 @@ class Mysql:
                                         " AND mdl_user.id >= 16687"
                                         " AND mdl_user_enrolments.`status` = 0"
                                         " AND mdl_enrol.courseid in (8911, 8915, 8919, 8923)"
-                                        " AND mdl_course.visible = 1"
                                         " AND mdl_context.contextlevel = 50"
                                         " AND mdl_role.id in (5, 16)"
                                         " group by "
