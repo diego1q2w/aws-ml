@@ -71,7 +71,7 @@ class Mysql:
               " mdl_logstore_standard_log.component" \
               " FROM mdl_logstore_standard_log" \
               " where mdl_logstore_standard_log.userid in ({ids})" \
-              " and FROM_UNIXTIME(mdl_logstore_standard_log.timecreated) < '2016-01-11%';".format(**{'ids': ids})
+              " and FROM_UNIXTIME(mdl_logstore_standard_log.timecreated) < '2017-01-09';".format(**{'ids': ids})
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor]
 
