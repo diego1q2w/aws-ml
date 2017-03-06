@@ -12,7 +12,7 @@ import time
 # and will try to reprocess them again.
 # In case is just a process has not started yet will get the data to process, chunked and  queued for further processing
 class Master:
-    def __init__(self, chunk_size=20, id_key='id'):
+    def __init__(self, chunk_size=40, id_key='id'):
         self.chunk_size = chunk_size
         self.id_key = id_key
 
@@ -47,13 +47,15 @@ class Master:
         update_min = True
         id_min = 0
         num_rows = 0
+        total_rows = 0
         for element in cursor:
             num_rows += 1
+            total_rows += 1
             if update_min:
                 update_min = False
                 id_min = element['id']
                 job_no += 1
-            if cursor.rownumber % chunk_size == 0:
+            if cursor.rownumber % chunk_size == 0 or cursor.rowcount == total_rows:
                 try:
                     self.create_job_register(job_no, process_id, id_min, element['id'], num_rows)
                 except Exception as e:
@@ -123,7 +125,6 @@ class Master:
                                    chunk_size=process['chunk_size'], process_id=process['id'])
 
                 job_no = int(job['job_no'])
-
                 if job['finished']:
                     continue
                 # In case the job just failed, it is ok, as well :)
@@ -139,7 +140,7 @@ class Master:
     def is_falilure(self, job):
         if 'queue_id' in job:
             res = AsyncResult(job['queue_id'])
-            return res.failed() or not res.ready()
+            return res.failed()
         # the job was not even queued so lets queued
         return True
 
