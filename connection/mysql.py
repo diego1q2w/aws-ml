@@ -3,13 +3,14 @@ import pymysql.cursors
 import os
 
 class Mysql:
-    sql = os.environ.get('MYSQL_QUERY', "SELECT {select} FROM auth_permission")
+    sql = os.environ.get('MYSQL_QUERY', "SELECT *  FROM (SELECT {select} FROM moodle_auvi_15aa.mdl_user LIMIT 5000) AS T1")
 
     def __init__(self):
         conn = pymysql.connect(host=os.environ.get('MYSQL_HOST', 'db'),
                                user=os.environ.get('MYSQL_USER', 'root'),
                                password=os.environ.get('MYSQL_PASSWORD', 'root'),
                                db=os.environ.get('MYSQL_DB', 'default'),
+                               port=int(os.environ.get('MYSQL_PORT', 3306)),
                                charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
         self.cursor = conn.cursor()
 
@@ -31,7 +32,7 @@ class Mysql:
                'max_id': max_id,
                'select': '*'})
         self.cursor.execute(sql)
-        return self
+        return [cursor for cursor in self.cursor]
 
     def findIdByRange(self, min_id, max_id):
         sql = (self.sql + " WHERE id BETWEEN {min_id} AND {max_id} ORDER BY id ASC;").format(
@@ -39,7 +40,18 @@ class Mysql:
                'max_id': max_id,
                'select': 'id'})
         self.cursor.execute(sql)
-        return self
+        return [cursor['id'] for cursor in self.cursor]
+
+    def findEventsWhereIds(self, ids):
+        sql = "SELECT mdl_logstore_standard_log.courseid," \
+              " mdl_logstore_standard_log.userid," \
+              " mdl_logstore_standard_log.eventname," \
+              " mdl_logstore_standard_log.component" \
+              " FROM mdl_logstore_standard_log" \
+              " where mdl_logstore_standard_log.userid in ({ids})" \
+              ";".format(**{'ids': ids})
+        self.cursor.execute(sql)
+        return [cursor for cursor in self.cursor]
 
     def getIdMax(self):
         sql = (self.sql + " ORDER BY id DESC LIMIT 1;").format(**{'select': 'id'})
