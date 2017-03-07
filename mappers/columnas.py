@@ -2,11 +2,6 @@
 import pandas as pd
 import os
 
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_rows', 1000)
-pd.set_option('display.max_columns', 100)
-
-
 class Columnas:
 
     def __init__(self, events, process_id, file_name):
@@ -42,13 +37,9 @@ class Columnas:
 
             event2 = event[['userid', 'crsevntname', 'component']].\
             groupby(['userid', 'crsevntname']).count()
-            # converts panadas dataframe multiindex to columns
-            #event2.reset_index(inplace=True)
-            tmp = event2.unstack()
-            # to convert usrid index to a column:
-            tmp.reset_index(inplace = True)
-            # to drop column multiindex
-            tmp.columns.droplevel()
+            # converts pandas dataframe multiindex to columns
+            event2.reset_index(inplace=True)
+            tmp = event2.pivot_table('component', 'usrid', 'crsevntname')
 
             path = os.path.join('/','home','admin','data', 'worker', self.process_id, self.file_name)
             directory = os.path.dirname(path)
