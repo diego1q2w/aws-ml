@@ -50,7 +50,7 @@ class Columnas:
             # to drop column multiindex
             tmp.columns.droplevel()
 
-            path = os.path.join('/data', self.process_id, self.file_name)
+            path = os.path.join('/','home','admin','data', 'worker', self.process_id, self.file_name)
             directory = os.path.dirname(path)
             if not os.path.exists(directory):
                 os.makedirs(directory)
