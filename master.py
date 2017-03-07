@@ -5,14 +5,13 @@ from worker import process_rows_task
 from celery.result import AsyncResult
 import numpy as np
 import time
-
 # This class will only search for incomplete process, will check whether the process has not started yet, or there
 # has been a problem in the way. given the case there was problem during a last process, automatically will search which
 # chunks of data got lost in the way, by either an error during the execution or the job was never queued
 # and will try to reprocess them again.
 # In case is just a process has not started yet will get the data to process, chunked and  queued for further processing
 class Master:
-    def __init__(self, chunk_size=40, id_key='id'):
+    def __init__(self, chunk_size=20, id_key='id'):
         self.chunk_size = chunk_size
         self.id_key = id_key
 
@@ -78,7 +77,8 @@ class Master:
                 'finished': False,
                 'num_rows': num_rows,
                 'processed_rows': 0,
-                'file_name': str(process_id)+"_"+str(job_no)+".csv",
+                'timestamp': time.time(),
+                'file_name': str(job_no)+".csv",
                 'file_processed': False}).run(conn)
             if res['errors'] == 0:
                 # will queue the job only in the case there was not an error, otherwise do not worry

@@ -14,4 +14,4 @@ celery_app = Celery('worker', broker=BROKER_URL, backend=BROKER_URL)
 @celery_app.task(bind=True)
 def process_rows_task(self, rethink_job_id):
     process = ProcessRowsTask(rethink_job_id)
-    process.run()
+    return process.run()
