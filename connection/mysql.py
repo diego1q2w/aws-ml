@@ -4,28 +4,28 @@ import os
 
 class Mysql:
     sql = os.environ.get('MYSQL_QUERY', "SELECT *  FROM ("
-                                        "SELECT {select}"
-                                        " FROM mdl_groups_members"
-                                        " INNER JOIN mdl_user ON mdl_user.id = mdl_groups_members.userid"
-                                        " INNER JOIN mdl_groups ON mdl_groups_members.groupid  = mdl_groups.id"
-                                        " INNER JOIN mdl_course ON mdl_course.id = mdl_groups.courseid"
-                                        " INNER JOIN mdl_enrol ON mdl_enrol.courseid = mdl_groups.courseid"
-                                        " INNER JOIN mdl_user_enrolments ON mdl_user_enrolments.enrolid = mdl_enrol.id "
-                                        " AND mdl_user_enrolments.userid = mdl_groups_members.userid "
-                                        " AND mdl_user.id = mdl_user_enrolments.userid"
-                                        " INNER JOIN mdl_context ON mdl_context.instanceid = mdl_groups.courseid"
-                                        " INNER JOIN mdl_role_assignments ON mdl_role_assignments.contextid = mdl_context.id "
-                                        " AND mdl_role_assignments.userid = mdl_groups_members.userid"
-                                        " INNER JOIN mdl_role ON mdl_role.id = mdl_role_assignments.roleid "
-                                        " WHERE"
-                                        " mdl_user.username not like '%demo%'"
-                                        " AND mdl_user.id >= 16687"
-                                        " AND mdl_user_enrolments.`status` = 0"
-                                        " AND mdl_enrol.courseid in (8911, 8915, 8919, 8923)"
-                                        " AND mdl_context.contextlevel = 50"
-                                        " AND mdl_role.id in (5, 16)"
-                                        " group by "
-                                        " mdl_groups_members.userid) AS T1")
+        "SELECT {select}"
+        " FROM mdl_groups_members"
+        " INNER JOIN mdl_user ON mdl_user.id = mdl_groups_members.userid"
+        " INNER JOIN mdl_groups ON mdl_groups_members.groupid  = mdl_groups.id"
+        " INNER JOIN mdl_course ON mdl_course.id = mdl_groups.courseid"
+        " INNER JOIN mdl_enrol ON mdl_enrol.courseid = mdl_groups.courseid"
+        " INNER JOIN mdl_user_enrolments ON mdl_user_enrolments.enrolid = mdl_enrol.id "
+        " AND mdl_user_enrolments.userid = mdl_groups_members.userid "
+        " AND mdl_user.id = mdl_user_enrolments.userid"
+        " INNER JOIN mdl_context ON mdl_context.instanceid = mdl_groups.courseid"
+        " INNER JOIN mdl_role_assignments ON mdl_role_assignments.contextid = mdl_context.id "
+        " AND mdl_role_assignments.userid = mdl_groups_members.userid"
+        " INNER JOIN mdl_role ON mdl_role.id = mdl_role_assignments.roleid "
+        " WHERE"
+        " mdl_user.username not like '%demo%'"
+        " AND mdl_user.id >= 16687"
+        " AND mdl_user_enrolments.`status` = 0"
+        " AND mdl_enrol.courseid in (8911, 8915, 8919, 8923)"
+        " AND mdl_context.contextlevel = 50"
+        " AND mdl_role.id in (5, 16)"
+        " group by "
+        " mdl_groups_members.userid) AS T1")
 
     def __init__(self):
         conn = pymysql.connect(host=os.environ.get('MYSQL_HOST', 'db'),
@@ -65,13 +65,14 @@ class Mysql:
         return [cursor['id'] for cursor in self.cursor]
 
     def findEventsWhereIds(self, ids):
+        # 1483941600 is UNIX_DATESTAMP for "2017-01-09"
         sql = "SELECT mdl_logstore_standard_log.courseid," \
               " mdl_logstore_standard_log.userid," \
               " mdl_logstore_standard_log.eventname," \
               " mdl_logstore_standard_log.component" \
               " FROM mdl_logstore_standard_log" \
               " where mdl_logstore_standard_log.userid in ({ids})" \
-              " and FROM_UNIXTIME(mdl_logstore_standard_log.timecreated) < '2017-01-09';".format(**{'ids': ids})
+              " and mdl_logstore_standard_log.timecreated < 1483941600".format(**{'ids': ids})
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor]
 
