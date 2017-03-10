@@ -39,7 +39,7 @@ class Columnas:
             groupby(['userid', 'crsevntname']).count()
             # converts pandas dataframe multiindex to columns
             event2.reset_index(inplace=True)
-            tmp = event2.pivot_table('component', 'usrid', 'crsevntname')
+            tmp = event2.pivot_table('component', 'userid', 'crsevntname')
 
             path = os.path.join('/','home','admin','data', 'worker', self.process_id, self.file_name)
             directory = os.path.dirname(path)
