@@ -53,7 +53,7 @@ class Columns:
 
             users_data_frame['tmp_entrar'] = list_tmp
 
-            tmp = tmp.merge(users_data_frame, left_on='usrid', right_on='usrid', how='left')
+            tmp = tmp.merge(users_data_frame, left_on='userid', right_on='userid', how='left')
 
             path = os.path.join('/','home','admin','data', 'worker', self.process_id, self.file_name)
             directory = os.path.dirname(path)

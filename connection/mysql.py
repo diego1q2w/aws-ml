@@ -79,7 +79,7 @@ class Mysql:
 
     def find_users_data_where_ids(self, ids):
         sql = "SELECT \
-                mdl_user.id as usrid, \
+                mdl_user.id as userid, \
                 from_unixtime(mdl_user.timecreated) as dat_matricula, \
                 from_unixtime(mdl_user.firstaccess) as dat_firstac, \
                 from_unixtime(mdl_user.lastlogin) as dat_lastlog, \
