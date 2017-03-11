@@ -17,8 +17,8 @@ class Master:
 
     def start_process(self, process_id):
         with mysql.Mysql() as db_connection:
-            id_min = db_connection.getIdMin()
-            id_max = db_connection.getIdMax()
+            id_min = db_connection.get_id_min()
+            id_max = db_connection.get_id_max()
             cursor = db_connection.get_data().get_cursor()
             number_of_rows = cursor.rowcount
             if number_of_rows > 0:
@@ -150,7 +150,7 @@ class Master:
                 self.queue_chunk(rethink_job_id)
             else:
                 with mysql.Mysql() as db_connection:
-                    cursor = db_connection.findIdByRange(kwars['min_id'], kwars['max_id']).get_cursor()
+                    cursor = db_connection.find_id_by_range(kwars['min_id'], kwars['max_id']).get_cursor()
                     self.chunk_data(cursor, kwars['process_id'], kwars['chunk_size'], kwars['job_no'])
         except Exception as e:
             print(e)

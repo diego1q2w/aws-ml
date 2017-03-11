@@ -2,6 +2,7 @@ import pymysql
 import pymysql.cursors
 import os
 
+
 class Mysql:
     sql = os.environ.get('MYSQL_QUERY', "SELECT *  FROM ("
         "SELECT {select}"
@@ -41,14 +42,14 @@ class Mysql:
         self.cursor.execute(sql)
         return self
 
-    def findById(self, id):
+    def find_by_id(self, id):
         sql = (self.sql + " WHERE id={id}").format(
             **{'id': id,
                'select': '*'})
         self.cursor.execute(sql)
         return self
 
-    def findByRange(self, min_id, max_id):
+    def find_by_range(self, min_id, max_id):
         sql = (self.sql + " WHERE id BETWEEN {min_id} AND {max_id} ORDER BY id ASC;").format(
             **{'min_id': min_id,
                'max_id': max_id,
@@ -56,7 +57,7 @@ class Mysql:
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor]
 
-    def findIdByRange(self, min_id, max_id):
+    def find_id_by_range(self, min_id, max_id):
         sql = (self.sql + " WHERE id BETWEEN {min_id} AND {max_id} ORDER BY id ASC;").format(
             **{'min_id': min_id,
                'max_id': max_id,
@@ -64,7 +65,7 @@ class Mysql:
         self.cursor.execute(sql)
         return [cursor['id'] for cursor in self.cursor]
 
-    def findEventsWhereIds(self, ids):
+    def find_events_where_ids(self, ids):
         # 1483941600 is UNIX_DATESTAMP for "2017-01-09"
         sql = "SELECT mdl_logstore_standard_log.courseid," \
               " mdl_logstore_standard_log.userid," \
@@ -76,12 +77,28 @@ class Mysql:
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor]
 
-    def getIdMax(self):
+    def find_users_data_where_ids(self, ids):
+        sql = "SELECT \
+                mdl_user.id as usrid, \
+                from_unixtime(mdl_user.timecreated) as dat_matricula, \
+                from_unixtime(mdl_user.firstaccess) as dat_firstac, \
+                from_unixtime(mdl_user.lastlogin) as dat_lastlog, \
+                from_unixtime(mdl_user.lastaccess) as dat_lastac \
+                FROM \
+                mdl_user \
+                WHERE \
+                mdl_user.username not like '%demo%' \
+                AND mdl_user.id >= 16687 \
+                AND mdl_user.id in ({ids})".format(**{'ids': ids})
+        self.cursor.execute(sql)
+        return [cursor for cursor in self.cursor]
+
+    def get_id_max(self):
         sql = (self.sql + " ORDER BY id DESC LIMIT 1;").format(**{'select': 'mdl_groups_members.userid as id'})
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor].pop()['id']
 
-    def getIdMin(self):
+    def get_id_min(self):
         sql = (self.sql + " ORDER BY id ASC LIMIT 1;").format(**{'select': 'mdl_groups_members.userid as id'})
         self.cursor.execute(sql)
         return [cursor for cursor in self.cursor].pop()['id']
