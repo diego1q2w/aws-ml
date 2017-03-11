@@ -9,9 +9,11 @@ RABBIT_VHOST = os.environ.get('RABBIT_VHOST', '')
 BROKER_URL = "amqp://{}:{}@{}:5672/{}".format(RABBIT_USER, RABBIT_PASS, RABBIT_SERVER, RABBIT_VHOST)
 
 celery_app = Celery('worker', broker=BROKER_URL, backend=BROKER_URL)
-celery_app.conf.task_acks_late = True
-celery_app.conf.task_reject_on_worker_lost = True
-celery_app.conf.broker_pool_limit = None
+celery_app.conf.update(
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    broker_pool_limit=None
+)
 
 @celery_app.task(bind=True)
 def process_rows_task(self, rethink_job_id):
