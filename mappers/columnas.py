@@ -60,5 +60,5 @@ class Columns:
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-            tmp.to_csv(path, index=True)
+            tmp.to_csv(path, index=False)
 
