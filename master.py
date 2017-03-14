@@ -24,7 +24,7 @@ class Master:
             if number_of_rows > 0:
                 number_of_chunks = np.ceil(float(number_of_rows)/float(self.chunk_size))
                 timestamp = time.time()
-                filename = str(timestamp) + "_"+process_id+".csv"
+                filename = "final_"+str(timestamp)+".csv"
                 with rethink.Rethink() as rethink_conn:
                     rethink_conn.set_database()
                     conn = rethink_conn.get_connection()

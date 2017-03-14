@@ -2,6 +2,7 @@ import rethinkdb as r
 from connection import rethink, mysql
 from mappers import columnas
 
+
 class ProcessRowsTask:
 
     def __init__(self, rethink_job_id):
@@ -18,12 +19,6 @@ class ProcessRowsTask:
             r.table('job').get(self.rethink_job_id).update(
                 {'finished': True,
                  'processed_rows': self.record['num_rows']}).run(conn)
-            number = r.table('job').filter({
-                'process_id': self.record['process_id'],
-                'finished': True}).count().run(conn)
-            r.table('process').get(self.record['process_id']).\
-                update({'processed_chunks': number}).\
-                run(conn)
 
     def run(self):
         if 'finished' in self.record and self.record['finished']:
