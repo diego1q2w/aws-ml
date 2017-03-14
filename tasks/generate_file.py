@@ -1,12 +1,33 @@
-from worker import celery_app
+import rethinkdb as r
+from connection import rethink
+from mappers.join_files import JoinFiles
+import os
 
 
-class GenerateFileTask(celery_app.Task):
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        pass
+class GenerateFile:
 
-    def on_success(self, retval, task_id, args, kwargs):
-        pass
+    def __init__(self, rethink_process_id):
+        self.rethink_process_id = rethink_process_id
+        with rethink.Rethink() as rethink_conn:
+            rethink_conn.set_database()
+            conn = rethink_conn.get_connection()
+            self.record = r.table('process').get(self.rethink_process_id).run(conn)
 
-    def run(self, process_id):
-        pass
+            self.number = r.table('job').filter({
+                'process_id': self.record['id'],
+                'finished': True}).count().run(conn)
+
+            r.table('process').get(self.record['id']).\
+                update({'processed_chunks': self.number}).\
+                run(conn)
+
+    def run(self):
+        if self.number >= self.record['chunks']:
+            path = os.path.join('/', 'home', 'admin', 'data', 'worker', self.record['id'])
+            JoinFiles().run(path, self.record['file_name'])
+            with rethink.Rethink() as rethink_conn:
+                rethink_conn.set_database()
+                conn = rethink_conn.get_connection()
+                r.table('process').get(self.record['id'])\
+                    .update({'finished': True})\
+                    .run(conn)

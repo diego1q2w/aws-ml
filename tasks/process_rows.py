@@ -1,6 +1,8 @@
 import rethinkdb as r
 from connection import rethink, mysql
 from mappers import columnas
+from tasks.generate_file import GenerateFile
+
 
 class ProcessRowsTask:
 
@@ -18,22 +20,23 @@ class ProcessRowsTask:
             r.table('job').get(self.rethink_job_id).update(
                 {'finished': True,
                  'processed_rows': self.record['num_rows']}).run(conn)
-            number = r.table('job').filter({
-                'process_id': self.record['process_id'],
-                'finished': True}).count().run(conn)
-            r.table('process').get(self.record['process_id']).\
-                update({'processed_chunks': number}).\
-                run(conn)
+        GenerateFile(self.record['process_id']).run()
 
     def run(self):
         if 'finished' in self.record and self.record['finished']:
             return True
         with mysql.Mysql() as db_connection:
-            ids = db_connection.findIdByRange(self.record['id_min'], self.record['id_max'])
-            events = db_connection.findEventsWhereIds(",".join(map(str, ids)))
+            try:
+                ids = db_connection.find_id_by_range(self.record['id_min'], self.record['id_max'])
+                ids = ",".join(map(str, ids))
+                events = db_connection.find_events_where_ids(ids)
+                users_data = db_connection.find_users_data_where_ids(ids)
+            except Exception as e:
+                db_connection.cursor.close()
+                raise e
 
         if len(events) > 0:
-            process_col = columnas.Columnas(events, self.record['process_id'], self.record['file_name'])
+            process_col = columnas.Columns(events, users_data, self.record['process_id'], self.record['file_name'])
             process_col.process()
         self.finish()
         return 'job_no' in self.record and self.record['job_no'] or 'Finished'

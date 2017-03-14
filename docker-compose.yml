@@ -17,7 +17,7 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
-      - ./.data:/data
+      - ./.data:/home/admin/data
     command: celery -A worker worker --loglevel=info --pool=solo
     env_file: .env
 
