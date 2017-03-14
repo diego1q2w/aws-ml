@@ -1,6 +1,7 @@
 import rethinkdb as r
 from connection import rethink, mysql
 from mappers import columnas
+from tasks.generate_file import GenerateFile
 
 
 class ProcessRowsTask:
@@ -19,6 +20,7 @@ class ProcessRowsTask:
             r.table('job').get(self.rethink_job_id).update(
                 {'finished': True,
                  'processed_rows': self.record['num_rows']}).run(conn)
+        GenerateFile(self.record['process_id']).run()
 
     def run(self):
         if 'finished' in self.record and self.record['finished']:

@@ -16,14 +16,7 @@ celery_app.conf.update(
     broker_pool_limit=None
 )
 
-@celery_app.task(ignore_result=True)
-def join_file(rethink_job_id):
-    generate = GenerateFile(rethink_job_id)
-    generate.run()
-
 @celery_app.task(bind=True)
 def process_rows_task(self, rethink_job_id):
     process = ProcessRowsTask(rethink_job_id)
-    result = process.run()
-    join_file.delay(rethink_job_id)
-    return result
+    return process.run()
