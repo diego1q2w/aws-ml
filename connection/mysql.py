@@ -70,6 +70,7 @@ class Mysql:
         sql = "SELECT mdl_logstore_standard_log.courseid," \
               " mdl_logstore_standard_log.userid," \
               " mdl_logstore_standard_log.eventname" \
+              " mdl_logstore_standard_log.component" \
               " FROM mdl_logstore_standard_log" \
               " where mdl_logstore_standard_log.userid in ({ids})" \
               " and mdl_logstore_standard_log.timecreated < 1483941600".format(**{'ids': ids})

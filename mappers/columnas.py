@@ -38,11 +38,11 @@ class Columns:
                 list_tmp.append(item)
             events_frame['crsevntname'] = list_tmp
 
-            event2 = events_frame[['userid', 'crsevntname']].groupby(['userid', 'crsevntname']).count()
+            event2 = events_frame[['userid', 'crsevntname', 'component']].groupby(['userid', 'crsevntname']).count()
 
             # converts pandas dataframe multiindex to columns
             event2.reset_index(inplace=True)
-            tmp = event2.pivot_table('userid', 'crsevntname')
+            tmp = event2.pivot_table('component', 'userid', 'crsevntname')
 
             tmp.reset_index(inplace=True)
 
