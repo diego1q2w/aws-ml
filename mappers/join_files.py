@@ -15,7 +15,8 @@ class JoinFiles:
         # Concatenamos archivos con Pandas
         concat_file = pd.concat(df_files, ignore_index = True)
         # Exportamos a archivo
-        concat_file.to_csv(name, index = False)
+        file_name = os.path.join(path, name)
+        concat_file.to_csv(file_name, index = False)
         # Borramos archivos chiquitos
         command = "rm " + " ".join(map(str, all_files))
         os.system(command)
