@@ -23,12 +23,11 @@ class GenerateFile:
 
     def run(self):
         if self.number >= self.record['chunks']:
+            path = os.path.join('/', 'home', 'admin', 'data', 'worker', self.record['id'])
+            JoinFiles().run(path, self.record['file_name'])
             with rethink.Rethink() as rethink_conn:
                 rethink_conn.set_database()
                 conn = rethink_conn.get_connection()
                 r.table('process').get(self.record['id'])\
                     .update({'finished': True})\
                     .run(conn)
-
-            path = os.path.join('/', 'home', 'admin', 'data', 'worker', self.record['id'])
-            JoinFiles().run(path, self.record['file_name'])
