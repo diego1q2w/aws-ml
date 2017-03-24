@@ -139,8 +139,9 @@ class Master:
 
     def is_falilure(self, job):
         if 'queue_id' in job:
-            res = AsyncResult(job['queue_id'])
-            return res.failed()
+            #res = AsyncResult(job['queue_id'])
+            #return res.failed()
+            return False
         # the job was not even queued so lets queued
         return True
 
